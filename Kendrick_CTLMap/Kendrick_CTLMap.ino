@@ -76,41 +76,82 @@ void parseControllerData(ControllerPtr ctl) {
     // eventually used to add close claw functionality
   }
   */
-
-  if(ctl->axisY() >= 10){
+  Serial.print(ctl->axisY());
+  Serial.println(" Y-Axis");
+  if(ctl->axisY() >= 10){    
+    // Full scale map in positive Y
+    pwmDutyCycle = (-1*map(ctl->axisY(),0, -512, 0, 100));
     gpioExt.digitalWrite(nSLPLPin, HIGH);
     gpioExt.digitalWrite(nSLPRPin, HIGH);
-    
-    // Full scale map in positive Y
-    pwmDutyCycle = map(ctl->axisY(), 0, 512, 0, 100);
-    
     digitalWrite(rightMotorDIRPin, FWD);
     digitalWrite(leftMotorDIRPin, FWD);
     pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
     ledcWrite(0, pwmGoLowCount);
-    ledcWrite(1, pwmGoLowCount);
+    ledcWrite(2, pwmGoLowCount);
+    Serial.println(pwmDutyCycle);
   }
 
   else if(ctl->axisY() <= -10) {
-    gpioExt.digitalWrite(nSLPLPin, HIGH);
-    gpioExt.digitalWrite(nSLPRPin, HIGH);
     
     // Full scale map in negative Y
-    pwmDutyCycle = map(ctl->axisY(), -512, 0, 0, 100);
-    
+    pwmDutyCycle = (-1*map(ctl->axisY(), 0, 512, 0, 100));
+    gpioExt.digitalWrite(nSLPLPin, HIGH);
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
     digitalWrite(rightMotorDIRPin, REV);
     digitalWrite(leftMotorDIRPin, REV);
     pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
     ledcWrite(0, pwmGoLowCount);
-    ledcWrite(1, pwmGoLowCount);
+    ledcWrite(2, pwmGoLowCount);
+    Serial.println(pwmDutyCycle);
+  }
+  else if(ctl->throttle() >= 10) {
+    pwmDutyCycle = (map(ctl->throttle(), 0, 1023, 0, 100));
+    gpioExt.digitalWrite(nSLPLPin, HIGH);
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
+    digitalWrite(rightMotorDIRPin, FWD);
+    digitalWrite(leftMotorDIRPin, REV);
+    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(0, pwmGoLowCount);
+    ledcWrite(2, pwmGoLowCount);
+    Serial.println(pwmDutyCycle);
+  }
+  else if(ctl->brake() >= 10) {
+    pwmDutyCycle = (map(ctl->brake(), 0, 1023, 0, 100));
+    gpioExt.digitalWrite(nSLPLPin, HIGH);
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
+    digitalWrite(rightMotorDIRPin, REV);
+    digitalWrite(leftMotorDIRPin, FWD);
+    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(0, pwmGoLowCount);
+    ledcWrite(2, pwmGoLowCount);
+    Serial.println(pwmDutyCycle);
+  }
+
+  else {
+    ledcWrite(0, 0);
+    ledcWrite(2, 0);
+    gpioExt.digitalWrite(nSLPLPin, LOW);
+    gpioExt.digitalWrite(nSLPRPin, LOW);
   }
 
 }
 
 void processControllers() {
-  for (auto myController : myControllers) {
-    parseControllerData(myController);
-  }
+    for (auto myController : myControllers) {
+        if (myController && myController->isConnected() && myController->hasData()) {
+            if (myController->isGamepad()) {
+                parseControllerData(myController);
+            } else if (myController->isMouse()) {
+                //processMouse(myController);
+            } else if (myController->isKeyboard()) {
+               //processKeyboard(myController);
+            } else if (myController->isBalanceBoard()) {
+                //processBalanceBoard(myController);
+            } else {
+                Serial.println("Unsupported controller");
+            }
+        }
+    }
 }
 
 void setup() {
@@ -122,8 +163,8 @@ void setup() {
   gpioExt.pinMode(nSLPLPin, OUTPUT);
   gpioExt.pinMode(nSLPRPin, OUTPUT);
 
-  gpioExt.digitalWrite(nSLPLPin, LOW);  //starts the robot with motors disabled (in sleep mode)
-  gpioExt.digitalWrite(nSLPRPin, LOW);  //starts the robot with motors disabled (in sleep mode)
+  gpioExt.digitalWrite(nSLPLPin, HIGH);  //starts the robot with motors disabled (in sleep mode)
+  gpioExt.digitalWrite(nSLPRPin, HIGH);  //starts the robot with motors disabled (in sleep mode)
 
   pinMode(rightMotorDIRPin, OUTPUT);
   pinMode(leftMotorDIRPin, OUTPUT);
@@ -131,8 +172,8 @@ void setup() {
   pinMode(leftMotorPWMPin, OUTPUT);
   ledcSetup(0, motorFreq, motorPwmBits); 
   ledcAttachPin(rightMotorPWMPin, 0); 
-  ledcSetup(1, motorFreq, motorPwmBits); 
-  ledcAttachPin(leftMotorPWMPin, 1); 
+  ledcSetup(2, motorFreq, motorPwmBits); 
+  ledcAttachPin(leftMotorPWMPin, 2); 
 
   BP32.setup(&onConnectedController, &onDisconnectedController);
 
@@ -142,9 +183,9 @@ void setup() {
 }
 
 void loop() {
-  bool dataUpdated = BP32.update();
-    if (dataUpdated){
-      processControllers();
-    }
+
+    bool dataUpdated = BP32.update();
+    if (dataUpdated)
+        processControllers();
   delay(150);
 }
