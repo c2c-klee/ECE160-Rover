@@ -20,8 +20,14 @@
 #define REV HIGH
 
 const int motorPwmMaxCount = pow(2, motorPwmBits);
-int pwmGoLowCount;
+int pwmGoLowCountLeft;
+int pwmGoLowCountRight;
+int pwmGoLowCountCenter;
 int pwmDutyCycle = 0;
+
+int leftDirection;
+int rightDirection;
+int xAxis;
 
 // Define i2C Multiplex
 Adafruit_MCP23X17 gpioExt;
@@ -81,28 +87,45 @@ void parseControllerData(ControllerPtr ctl) {
   if(ctl->axisY() >= 10){    
     // Full scale map in positive Y
     pwmDutyCycle = (-1*map(ctl->axisY(),0, -512, 0, 100));
+
+    xAxis = (map(ctl->axisX(), -512, 512, 0, 100));
+    leftDirection = (map(xAxis/50, 0, 2, 0, 100));
+    rightDirection = (map(50/(xAxis+1), 0, 50, 0, 100));
+
+    Serial.println(xAxis);
+
+
     gpioExt.digitalWrite(nSLPLPin, HIGH);
     gpioExt.digitalWrite(nSLPRPin, HIGH);
     digitalWrite(rightMotorDIRPin, FWD);
     digitalWrite(leftMotorDIRPin, FWD);
-    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCount);
-    ledcWrite(2, pwmGoLowCount);
+    pwmGoLowCountLeft = 0.01 * (0.01 * leftDirection) * pwmDutyCycle * motorPwmMaxCount;
+    pwmGoLowCountRight = 0.01 * (0.01 * rightDirection) * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(0, pwmGoLowCountRight);
+    ledcWrite(2, pwmGoLowCountLeft);
     Serial.println(pwmDutyCycle);
   }
 
   else if(ctl->axisY() <= -10) {
-    
     // Full scale map in negative Y
     pwmDutyCycle = (-1*map(ctl->axisY(), 0, 512, 0, 100));
+
+    xAxis = (map(ctl->axisX(), -512, 512, 0, 100));
+    leftDirection = (map(xAxis/50, 0, 2, 0, 100));
+    rightDirection = (map(50/(xAxis+1), 0, 50, 0, 100));
+
+    Serial.println(xAxis);
+
+
     gpioExt.digitalWrite(nSLPLPin, HIGH);
     gpioExt.digitalWrite(nSLPRPin, HIGH);
     digitalWrite(rightMotorDIRPin, REV);
     digitalWrite(leftMotorDIRPin, REV);
-    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCount);
-    ledcWrite(2, pwmGoLowCount);
-    Serial.println(pwmDutyCycle);
+    pwmGoLowCountLeft = 0.01 * (0.01 * leftDirection) * pwmDutyCycle * motorPwmMaxCount;
+    pwmGoLowCountRight = 0.01 * (0.01 * rightDirection) * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(0, pwmGoLowCountRight);
+    ledcWrite(2, pwmGoLowCountLeft);
+    //Serial.println(pwmDutyCycle);
   }
   else if(ctl->throttle() >= 10) {
     pwmDutyCycle = (map(ctl->throttle(), 0, 1023, 0, 100));
@@ -110,10 +133,10 @@ void parseControllerData(ControllerPtr ctl) {
     gpioExt.digitalWrite(nSLPRPin, HIGH);
     digitalWrite(rightMotorDIRPin, FWD);
     digitalWrite(leftMotorDIRPin, REV);
-    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCount);
-    ledcWrite(2, pwmGoLowCount);
-    Serial.println(pwmDutyCycle);
+    pwmGoLowCountCenter = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(0, pwmGoLowCountCenter);
+    ledcWrite(2, pwmGoLowCountCenter);
+    //Serial.println(pwmDutyCycle);
   }
   else if(ctl->brake() >= 10) {
     pwmDutyCycle = (map(ctl->brake(), 0, 1023, 0, 100));
@@ -121,10 +144,10 @@ void parseControllerData(ControllerPtr ctl) {
     gpioExt.digitalWrite(nSLPRPin, HIGH);
     digitalWrite(rightMotorDIRPin, REV);
     digitalWrite(leftMotorDIRPin, FWD);
-    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCount);
-    ledcWrite(2, pwmGoLowCount);
-    Serial.println(pwmDutyCycle);
+    pwmGoLowCountCenter = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(0, pwmGoLowCountCenter);
+    ledcWrite(2, pwmGoLowCountCenter);
+    //Serial.println(pwmDutyCycle);
   }
 
   else {
