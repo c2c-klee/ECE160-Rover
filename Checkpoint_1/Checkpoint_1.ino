@@ -19,8 +19,11 @@
 // Set DIR bit to 0 to move the robot in direction opposite claw (forward)
 // Set DIR bit to 1 to move the robot in direction of claw (reverse)
 const int motorPwmMaxCount = pow(2, motorPwmBits);
-int pwmGoLowCount;
+int pwmGoLowCountRight;
+int pwmGoLowCountLeft;
 int pwmDutyCycle = 0;
+float calibratedMotorFac = 0.9682;
+
 //Count at which the motor PWM pulse goes low
 //Duty cycle as percentage from 0-100
 Adafruit_MCP23X17 gpioExt;
@@ -51,9 +54,10 @@ void loop() {
     gpioExt.digitalWrite(nSLPRPin, HIGH);
     digitalWrite(rightMotorDIRPin, REV);
     digitalWrite(leftMotorDIRPin, REV);
-    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-    ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+    pwmGoLowCountRight = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    pwmGoLowCountLeft = 0.01 * pwmDutyCycle * motorPwmMaxCount * calibratedMotorFac;
+    ledcWrite(rightMotorPWMPin, pwmGoLowCountRight);
+    ledcWrite(leftMotorPWMPin, pwmGoLowCountLeft);
   } else {
     Serial.println("You entered an invalid Duty Cycle: setting it to 0");
     pwmDutyCycle = 0;
