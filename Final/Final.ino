@@ -1,20 +1,32 @@
-/*Here is the definitions for the set up data of bumper function*/
-#include <Adafruit_MCP23X17.h>
-#define GPA0 0
-#define GPA1 1
-#define GPA2 2
-#define GPA3 3
-#define GPA4 4
-#define GPA5 5
+// Final Codebase.
 
-/*Definitions for claw set up*/
-#include <Adafruit_PWMServoDriver.h>
-#define pca9685PwmBits 12
-#define minPW 500   // min pulse width in microseconds to make servo at 0 degrees
-#define maxPW 2500  // max pulse width in microseconds to make servo at 180
-#define SERVO_FREQ 50   // Analog servos run at ~50 Hz updates
-#define clawServoNum 0  // this is servo number 0 controller on the PCA9685
-#define ON_COUNT 0
+#include <Adafruit_MCP23X17.h>
+#include <Bluepad32.h>
+
+#define nSLPLPin 8
+#define nSLPRPin 9
+#define rightMotorDIRPin 15
+#define rightMotorPWMPin 13
+#define leftMotorDIRPin 14
+#define leftMotorPWMPin 12
+#define motorFreq 500
+#define motorPwmBits 8
+#define FWD LOW
+#define REV HIGH
+
+const int motorPwmMaxCount = pow(2, motorPwmBits);
+int pwmGoLowCountLeft;
+int pwmGoLowCountRight;
+int pwmDutyCycle = 0;
+
+int leftDirection;
+int rightDirection;
+
+float calibratedMotorFac = 0.9682;
+
+Adafruit_MCP23X17 gpioExt;
+
+ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
 /*Set up for Claw command function*/
 const int pwm0DegCount = 0.000001 * minPW * SERVO_FREQ * pow(2, pca9685PwmBits);
