@@ -1,43 +1,26 @@
-#include <QTRSensors.h>                                          // Line Following Sensor
-#define nSensors 8                                               //Define number of sensors in array
-#define ctrlEven 5                                               //Define Pin number for control signal for even numbered sensors
-#define ctrlOdd 25                                               //Define Pin number for control signal for odd numbered sensors
-const uint8_t sensorPins[] = { 26, 27, 4, 16, 17, 18, 19, 23 };  // ESP32 Pins for line sensor on robot
-QTRSensors qtrArray;
-// Create a sensor array object of class QTRSensors
-uint16_t sensorValues[nSensors];            // Store raw sensor values in an array
-uint16_t sensorValuesCalibrated[nSensors];  //Store calibrated sensor values in an array
+#include <Adafruit_MCP23X17.h>
+#define GPA0 0
+#define GPA1 1
+#define GPA2 2
+#define GPA3 3
+#define GPA4 4
+#define GPA5 5
+Adafruit_MCP23X17 gpioExt;
+int gpioExtPins[6] = { GPA0, GPA1, GPA2, GPA3, GPA4, GPA5 };
 void setup() {
   Serial.begin(115200);
-  qtrArray.setTypeRC();
-  // Ours is an RC-type (digital) array
-  qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
-  qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
-  Serial.println("Starting Calibration");
-  for (int i = 0; i < 400; i++) {
-    qtrArray.calibrate();
+  gpioExt.begin_I2C(0x20);
+  for (int i = 0; i < 6; i++) {
+    gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
   }
-  // This is the calibration loop that will store min/max values
-  // Takes about 10 seconds to complete. while calibrating, move the
-  // sensor array over full range of color that it will see.
-  Serial.println("Calibration Completed");
+  Serial.println("Reading Bumper Switches");
 }
-void parseSensorData() {
-  qtrArray.read(sensorValues);
-  // Read the raw sensor data
-  qtrArray.readCalibrated(sensorValuesCalibrated);  // Read and calibrate the sensor data
-  for (int i = 0; i < 8; i++) {
-    Serial.print(sensorValues[i]);
+void SensorParseData() {
+  for (int i = 5; i > -1; i--) {
+    Serial.print(gpioExt.digitalRead(gpioExtPins[i]));
     Serial.print(" ");
   }
-  Serial.print(" || ");
-  for (int i = 0; i < 8; i++) {
-    //Print the raw data array
-    //Separate the raw and calibrated data
-    // Print the calibrated data array
-    Serial.print(sensorValuesCalibrated[i]);
-    Serial.print(" ");
-  }
+  Serial.print(gpioExt.readGPIOA(), BIN);
   Serial.println();
-  delay(10);
+  delay(500);
 }
