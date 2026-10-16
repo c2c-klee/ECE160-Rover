@@ -1,37 +1,6 @@
 int xAxis;
 
-void onConnectedController(ControllerPtr ctl) {
-  bool foundEmptySlot = false;
-  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-    if (myControllers[i] == nullptr) {
-      Serial.print("Controller is connected, index: ");
-      Serial.println(i);
 
-      ControllerProperties properties = ctl->getProperties();
-      Serial.print("Controller Model: ");
-      Serial.print(ctl->getModelName().c_str());
-      
-      myControllers[i] = ctl;
-      foundEmptySlot = true;
-      break;
-    }
-  }
-}
-
-void onDisconnectedController(ControllerPtr ctl) {
-    bool foundController = false;
-    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-        if (myControllers[i] == ctl) {
-            Serial.printf("CALLBACK: Controller disconnected from index=%d\n", i);
-            myControllers[i] = nullptr;
-            foundController = true;
-            break;
-        }
-    }
-    if (!foundController) {
-        Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
-    }
-}
 
 void parseControllerData(ControllerPtr ctl) {
   /*
@@ -164,7 +133,6 @@ void parseControllerData(ControllerPtr ctl) {
   }
 
 }
-
 
 void processControllers() {
     for (auto myController : myControllers) {

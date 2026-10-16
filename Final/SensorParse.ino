@@ -5,8 +5,10 @@
 #define GPA3 3
 #define GPA4 4
 #define GPA5 5
-Adafruit_MCP23X17 gpioExt;
+//Adafruit_MCP23X17 gpioExt;
 int gpioExtPins[6] = { GPA0, GPA1, GPA2, GPA3, GPA4, GPA5 };
+
+/*
 void setup() {
   Serial.begin(115200);
   gpioExt.begin_I2C(0x20);
@@ -15,6 +17,7 @@ void setup() {
   }
   Serial.println("Reading Bumper Switches");
 }
+*/
 void SensorParseData() {
   for (int i = 5; i > -1; i--) {
     Serial.print(gpioExt.digitalRead(gpioExtPins[i]));
