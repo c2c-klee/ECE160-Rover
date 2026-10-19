@@ -1,5 +1,5 @@
 
-void setServoPosition(int angle) {
+int setServoPosition(int angle) {
   angle = constran(angle, 0, 148);
   puleCount = map(angle, 0, 180, minPulseCount, maxPulseCount);
   ledcWrite(servoPin, pulseCount);
