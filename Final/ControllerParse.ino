@@ -31,6 +31,9 @@ void LeftparseControllerData(ControllerPtr ctl) {
     ledcWrite(2, pwmGoLowCount);
     Serial.println(pwmDutyCycle);
   }
+  else if(ctl->a()) {
+    setServoPosition(120);
+  }
   else {
     ledcWrite(2, 0);
     gpioExt.digitalWrite(nSLPLPin, LOW);
