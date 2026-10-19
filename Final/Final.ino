@@ -81,13 +81,31 @@ void processControllers() {
 }
 
 void setup() {
-  // put your setup code here, to run once:
-  BP32.setup(&onConnectedController, &onDisconnectedController);
-  Serial.println("Connected, Controller");
+    Serial.begin(112500);
+    Serial.println("Debug Comms Open");
+    // put your setup code here, to run once:
 
-  BP32.forgetBluetoothKeys();
+     // start GPIO interface
+    gpioExt.begin_I2C(0x20);
+    gpioExt.pinMode(nSLPLPin, OUTPUT);
+    gpioExt.pinMode(nSLPRPin, OUTPUT);
+    gpioExt.digitalWrite(nSLPLPin, HIGH);  //starts the robot with motors disabled (in sleep mode)
+    gpioExt.digitalWrite(nSLPRPin, HIGH);  //starts the robot with motors disabled (in sleep mode)
+    pinMode(rightMotorDIRPin, OUTPUT);
+    pinMode(leftMotorDIRPin, OUTPUT);
+    pinMode(rightMotorPWMPin, OUTPUT);
+    pinMode(leftMotorPWMPin, OUTPUT);
+    ledcSetup(0, motorFreq, motorPwmBits); 
+    ledcAttachPin(rightMotorPWMPin, 0); 
+    ledcSetup(2, motorFreq, motorPwmBits); 
+    ledcAttachPin(leftMotorPWMPin, 2); 
 
-  BP32.enableVirtualDevice(false);
+    BP32.setup(&onConnectedController, &onDisconnectedController);
+    Serial.println("Connected, Controller");
+
+    BP32.forgetBluetoothKeys();
+
+    BP32.enableVirtualDevice(false);
 }
 
 
