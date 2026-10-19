@@ -15,8 +15,7 @@
 #define REV HIGH
 
 const int motorPwmMaxCount = pow(2, motorPwmBits);
-int pwmGoLowCountLeft;
-int pwmGoLowCountRight;
+int pwmGoLowCount;
 int pwmDutyCycle = 0;
 
 int leftDirection;
@@ -69,5 +68,9 @@ int SensorParseData();
 }
 void loop() {
   // put your main code here, to run repeatedly:
-
+    bool dataUpdated = BP32.update();
+    if (dataUpdated)
+        Serial.println("Controller Data Updated");
+        processControllers();
+  delay(150);
 }

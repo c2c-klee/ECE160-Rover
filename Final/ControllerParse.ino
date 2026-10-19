@@ -1,39 +1,6 @@
 int xAxis;
 
-void onConnectedController(ControllerPtr ctl) {
-  bool foundEmptySlot = false;
-  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-    if (myControllers[i] == nullptr) {
-      Serial.print("Controller is connected, index: ");
-      Serial.println(i);
-
-      ControllerProperties properties = ctl->getProperties();
-      Serial.print("Controller Model: ");
-      Serial.print(ctl->getModelName().c_str());
-      
-      myControllers[i] = ctl;
-      foundEmptySlot = true;
-      break;
-    }
-  }
-}
-
-void onDisconnectedController(ControllerPtr ctl) {
-    bool foundController = false;
-    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-        if (myControllers[i] == ctl) {
-            Serial.printf("CALLBACK: Controller disconnected from index=%d\n", i);
-            myControllers[i] = nullptr;
-            foundController = true;
-            break;
-        }
-    }
-    if (!foundController) {
-        Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
-    }
-}
-
-void parseControllerData(ControllerPtr ctl) {
+void LeftparseControllerData(ControllerPtr ctl) {
   /*
   if(ctl->a()){
     // eventually used to add open claw functionality
@@ -46,140 +13,52 @@ void parseControllerData(ControllerPtr ctl) {
   Serial.println(" Y-Axis");
   if(ctl->axisY() >= 10){    
     // Full scale map in positive Y
-    pwmDutyCycle = (-1*map(ctl->axisY(),0, -512, 0, 100));
-    xAxis = (map(ctl->axisX(), -512, 512, 0, 100));
-    leftDirection = (map(xAxis/50, 0, 2, 0, 100));
-    rightDirection = (map(50/(xAxis+1), 0, 50, 0, 100));
-
-    Serial.println(xAxis);
-
-
+    pwmDutyCycle = (map(ctl->axisY(),0, 512, 0, 100));
     gpioExt.digitalWrite(nSLPLPin, HIGH);
-    gpioExt.digitalWrite(nSLPRPin, HIGH);
-    digitalWrite(rightMotorDIRPin, FWD);
     digitalWrite(leftMotorDIRPin, FWD);
-    pwmGoLowCountLeft = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    pwmGoLowCountRight = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCountRight);
-    ledcWrite(2, pwmGoLowCountLeft);
+    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(2, pwmGoLowCount);
     Serial.println(pwmDutyCycle);
-    Serial.println(xAxis);
-
   }
 
   else if(ctl->axisY() <= -10) {
+    
     // Full scale map in negative Y
-    pwmDutyCycle = (-1*map(ctl->axisY(), 0, 512, 0, 100));
-
-    xAxis = (map(ctl->axisX(), -512, 512, 0, 100));
-    leftDirection = (map(xAxis/50, 0, 2, 0, 100));
-    rightDirection = (map(50/(xAxis+1), 0, 50, 0, 100));
-
-    Serial.println(xAxis);
-
-
+    pwmDutyCycle = (map(ctl->axisY(), 0, -512, 0, 100));
     gpioExt.digitalWrite(nSLPLPin, HIGH);
-    gpioExt.digitalWrite(nSLPRPin, HIGH);
-    digitalWrite(rightMotorDIRPin, REV);
     digitalWrite(leftMotorDIRPin, REV);
-    pwmGoLowCountLeft = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    pwmGoLowCountRight = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCountRight);
-    ledcWrite(2, pwmGoLowCountLeft);
-    //Serial.println(pwmDutyCycle);
-  }
-
-  else if(ctl->axisRX() >= 10){    
-    // Full scale map in positive Y
-    pwmDutyCycle = (-1*map(ctl->axisRX(),0, -512, 0, 100));
-    xAxis = (map(ctl->axisX(), -512, 512, 0, 100));
-    leftDirection = (map(xAxis/50, 0, 2, 0, 100));
-    rightDirection = (map(50/(xAxis+1), 0, 50, 0, 100));
-
-    Serial.println(xAxis);
-
-
-    gpioExt.digitalWrite(nSLPLPin, HIGH);
-    gpioExt.digitalWrite(nSLPRPin, LOW);
-    digitalWrite(rightMotorDIRPin, FWD);
-    digitalWrite(leftMotorDIRPin, FWD);
-    pwmGoLowCountLeft = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    pwmGoLowCountRight = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCountRight);
-    ledcWrite(2, pwmGoLowCountLeft);
+    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(2, pwmGoLowCount);
     Serial.println(pwmDutyCycle);
-    Serial.println(xAxis);
-
   }
-
-  else if(ctl->axisRX() <= -10) {
-    // Full scale map in negative Y
-    pwmDutyCycle = (-1*map(ctl->axisRX(), 0, 512, 0, 100));
-
-    xAxis = (map(ctl->axisX(), -512, 512, 0, 100));
-    leftDirection = (map(xAxis/50, 0, 2, 0, 100));
-    rightDirection = (map(50/(xAxis+1), 0, 50, 0, 100));
-
-    Serial.println(xAxis);
-
-    gpioExt.digitalWrite(nSLPLPin, LOW);
-    gpioExt.digitalWrite(nSLPRPin, HIGH);
-    digitalWrite(rightMotorDIRPin, FWD);
-    digitalWrite(leftMotorDIRPin, FWD);
-    pwmGoLowCountLeft = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    pwmGoLowCountRight = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCountRight);
-    ledcWrite(2, pwmGoLowCountLeft);
-    //Serial.println(pwmDutyCycle);
-  }
-
-  else if(ctl->throttle() >= 10) {
-    pwmDutyCycle = (map(ctl->throttle(), 0, 1023, 0, 100));
-    gpioExt.digitalWrite(nSLPLPin, HIGH);
-    gpioExt.digitalWrite(nSLPRPin, HIGH);
-    digitalWrite(rightMotorDIRPin, FWD);
-    digitalWrite(leftMotorDIRPin, REV);
-    pwmGoLowCountCenter = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCountCenter);
-    ledcWrite(2, pwmGoLowCountCenter);
-    //Serial.println(pwmDutyCycle);
-  }
-  else if(ctl->brake() >= 10) {
-    pwmDutyCycle = (map(ctl->brake(), 0, 1023, 0, 100));
-    gpioExt.digitalWrite(nSLPLPin, HIGH);
-    gpioExt.digitalWrite(nSLPRPin, HIGH);
-    digitalWrite(rightMotorDIRPin, REV);
-    digitalWrite(leftMotorDIRPin, FWD);
-    pwmGoLowCountCenter = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(0, pwmGoLowCountCenter);
-    ledcWrite(2, pwmGoLowCountCenter);
-    //Serial.println(pwmDutyCycle);
-  }
-
   else {
-    ledcWrite(0, 0);
     ledcWrite(2, 0);
     gpioExt.digitalWrite(nSLPLPin, LOW);
-    gpioExt.digitalWrite(nSLPRPin, LOW);
   }
 
 }
 
-
-void processControllers() {
-    for (auto myController : myControllers) {
-        if (myController && myController->isConnected() && myController->hasData()) {
-            if (myController->isGamepad()) {
-                parseControllerData(myController);
-            } else if (myController->isMouse()) {
-                //processMouse(myController);
-            } else if (myController->isKeyboard()) {
-               //processKeyboard(myController);
-            } else if (myController->isBalanceBoard()) {
-                //processBalanceBoard(myController);
-            } else {
-                Serial.println("Unsupported controller");
-            }
-        }
-    }
-}
+void RightparseControllerData(ControllerPtr ctl) {
+  if(ctl->axisRY() >= 10){    
+    // Full scale map in positive Y
+    pwmDutyCycle = (map(ctl->axisRY(),0, 512, 0, 100));
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
+    digitalWrite(rightMotorDIRPin, FWD);
+    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(0, pwmGoLowCount);
+    Serial.println("test");
+  }
+  else if(ctl->axisRY() <= -10) {
+    // Full scale map in negative Y
+    pwmDutyCycle = (map(ctl->axisRY(), 0, -512, 0, 100));
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
+    digitalWrite(rightMotorDIRPin, REV);
+    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(0, pwmGoLowCount);
+    Serial.println(pwmDutyCycle);
+  }
+  else {
+    ledcWrite(0, 0);
+    gpioExt.digitalWrite(nSLPRPin, LOW);
+  }
+} 
