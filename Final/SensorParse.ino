@@ -1,4 +1,4 @@
-#include <Adafruit_MCP23X17.h>
+/* #include <Adafruit_MCP23X17.h>
 #define GPA0 0
 #define GPA1 1
 #define GPA2 2
@@ -17,7 +17,7 @@ void setup() {
   }
   Serial.println("Reading Bumper Switches");
 }
-*/
+
 void SensorParseData() {
   for (int i = 5; i > -1; i--) {
     Serial.print(gpioExt.digitalRead(gpioExtPins[i]));
@@ -28,3 +28,4 @@ void SensorParseData() {
   delay(500);
 }
 //Change
+*/
