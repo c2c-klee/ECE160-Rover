@@ -27,70 +27,45 @@ Adafruit_MCP23X17 gpioExt;
 
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
-void onConnectedController(ControllerPtr ctl) {
-  bool foundEmptySlot = false;
-  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-    if (myControllers[i] == nullptr) {
-      Serial.print("Controller is connected, index: ");
-      Serial.println(i);
+/*Set up for Claw command function*/
+const int pwm0DegCount = 0.000001 * minPW * SERVO_FREQ * pow(2, pca9685PwmBits);
+const int pwm180DegCount = 0.000001 * maxPW * SERVO_FREQ * pow(2, pca9685PwmBits);
+const int pwm90DegCount = (pwm0DegCount + pwm180DegCount) / 2;
+int angle = angle;
+int angleCount;
+//Start at angle of 90 degrees to not stress servo
+//variable to store count at which PWM will go low
+//Create PWM extender object at I2C address 0x40
+Adafruit_PWMServoDriver pwmExt = Adafruit_PWMServoDriver(0x40);
+void setup() {
+  Serial.begin(57600);
+  Serial.println("Enter the claw servo angle in degrees from 0-180:");
+  // commands to initialize the PCA9685 PWM extender
+  pwmExt.begin();
+  pwmExt.setOscillatorFrequency(27000000);
+  pwmExt.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
+  pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
+}
 
-      ControllerProperties properties = ctl->getProperties();
-      Serial.print("Controller Model: ");
-      Serial.print(ctl->getModelName().c_str());
-      
-      myControllers[i] = ctl;
-      foundEmptySlot = true;
-      break;
-    }
+/*Below is the set up for the bumper function*/
+Adafruit_MCP23X17 gpioExt;
+int gpioExtPins[6] = { GPA0, GPA1, GPA2, GPA3, GPA4, GPA5 };
+void setup() {
+  Serial.begin(115200);
+  gpioExt.begin_I2C(0x20);
+  for (int i = 0; i < 6; i++) {
+    gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
+  }
+  Serial.println("Reading Bumper Switches");
+}
+
+int SensorParseData();
+  if (SensorParseData == 1);
+    return 1;
+  } else {
+    return 0;
   }
 }
-
-void onDisconnectedController(ControllerPtr ctl) {
-    bool foundController = false;
-    for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-        if (myControllers[i] == ctl) {
-            Serial.printf("CALLBACK: Controller disconnected from index=%d\n", i);
-            myControllers[i] = nullptr;
-            foundController = true;
-            break;
-        }
-    }
-    if (!foundController) {
-        Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
-    }
-}
-
-void processControllers() {
-    for (auto myController : myControllers) {
-        if (myController && myController->isConnected() && myController->hasData()) {
-            if (myController->isGamepad()) {
-                LeftparseControllerData(myController);
-                RightparseControllerData(myController);
-                Serial.println("Controller Testing");
-            } else if (myController->isMouse()) {
-                //processMouse(myController);
-            } else if (myController->isKeyboard()) {
-               //processKeyboard(myController);
-            } else if (myController->isBalanceBoard()) {
-                //processBalanceBoard(myController);
-            } else {
-                Serial.println("Unsupported controller");
-            }
-        }
-    }
-}
-
-void setup() {
-  // put your setup code here, to run once:
-  BP32.setup(&onConnectedController, &onDisconnectedController);
-  Serial.println("Connected, Controller");
-
-  BP32.forgetBluetoothKeys();
-
-  BP32.enableVirtualDevice(false);
-}
-
-
 void loop() {
   // put your main code here, to run repeatedly:
     bool dataUpdated = BP32.update();
