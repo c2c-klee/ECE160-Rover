@@ -2,7 +2,7 @@
 
 #include <Adafruit_MCP23X17.h>
 #include <Bluepad32.h>
-
+#include <QTRSensors.h>                                          // Line Following Sensor
 #include <Adafruit_PWMServoDriver.h>
 #define pca9685PwmBits 12
 #define minPW 500   // min pulse width in microseconds to make servo at 0 degrees
@@ -11,6 +11,9 @@
 #define clawServoNum 0  // this is servo number 0 controller on the PCA9685
 #define ON_COUNT 0
 
+#define nSensors 8                                               //Define number of sensors in array
+#define ctrlEven 5                                               //Define Pin number for control signal for even numbered sensors
+#define ctrlOdd 25                                               //Define Pin number for control signal for odd numbered sensors
 
 #define nSLPLPin 8
 #define nSLPRPin 9
