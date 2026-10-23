@@ -29,6 +29,8 @@
 #define GPA3 3
 #define GPA4 4
 #define GPA5 5
+#define GPB2 10
+#define GPB3 11
 
 int bumperValue = 0;
 
@@ -155,6 +157,8 @@ void setup() {
         gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
     }
 
+    gpioExt.pinMode(GPB2, OUTPUT);
+
     pwmExt.begin();
     pwmExt.setOscillatorFrequency(27000000);
     pwmExt.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
@@ -173,7 +177,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-    SensorParseData();
+    //SensorParseData();
+    gpioExt.digitalWrite(GPB2, HIGH);
     bool dataUpdated = BP32.update();
     if (dataUpdated)
         Serial.println("Controller Data Updated");
