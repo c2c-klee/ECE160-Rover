@@ -36,6 +36,8 @@
 #define GPB3 11
 
 int bumperValue = 0;
+int k = 0;
+
 
   // the PWM signal will go high at a count value of 0
 const int pwm0DegCount = 0.000001 * minPW * SERVO_FREQ * pow(2, pca9685PwmBits);
@@ -61,6 +63,16 @@ Adafruit_MCP23X17 gpioExt;
 int gpioExtPins[6] = { GPA0, GPA1, GPA2, GPA3, GPA4, GPA5 };
 
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
+
+const uint8_t sensorPins[] = { 26, 27, 4, 16, 17, 18, 19, 23 };  // ESP32 Pins for line sensor on robot
+QTRSensors qtrArray;
+// Create a sensor array object of class QTRSensors
+uint16_t sensorValues[nSensors];            // Store raw sensor values in an array
+uint16_t sensorValuesCalibrated[nSensors];  //Store calibrated sensor values in an array
+
+int leftSensorValues = 0;
+int rightSensorValues = 0;
+int combinedSensorValues = 0;
 
 void onConnectedController(ControllerPtr ctl) {
   bool foundEmptySlot = false;
@@ -136,10 +148,40 @@ void processControllers() {
     }
 }
 
+void lineLED(){
+    qtrArray.readCalibrated(sensorValuesCalibrated);
+    leftSensorValues = (sensorValuesCalibrated[0]+sensorValuesCalibrated[1]);
+    rightSensorValues = (sensorValuesCalibrated[6]+sensorValuesCalibrated[7]);
+    combinedSensorValues = (leftSensorValues + rightSensorValues);
+    Serial.print(leftSensorValues);
+    Serial.print(" || ");
+    Serial.println(rightSensorValues);
+    if (leftSensorValues > 200 && rightSensorValues > 200){
+        gpioExt.digitalWrite(GPB2, HIGH);
+        gpioExt.digitalWrite(GPB3, HIGH);
+
+    }
+    else if (leftSensorValues > 200) {
+        gpioExt.digitalWrite(GPB2, HIGH);
+        gpioExt.digitalWrite(GPB3, LOW);
+
+    }
+    else if (rightSensorValues > 200) {
+        gpioExt.digitalWrite(GPB3, HIGH);
+        gpioExt.digitalWrite(GPB2, LOW);
+
+    }
+    else {
+        gpioExt.digitalWrite(GPB3, LOW);
+        gpioExt.digitalWrite(GPB2, LOW);
+    }
+}
+
 void setup() {
     Serial.begin(112500);
     Serial.println("Debug Comms Open");
     // put your setup code here, to run once:
+
 
      // start GPIO interface
     gpioExt.begin_I2C(0x20);
@@ -161,6 +203,7 @@ void setup() {
     }
 
     gpioExt.pinMode(GPB2, OUTPUT);
+    gpioExt.pinMode(GPB3, OUTPUT);
 
     pwmExt.begin();
     pwmExt.setOscillatorFrequency(27000000);
@@ -168,6 +211,8 @@ void setup() {
     pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
 
     setServoPosition(120);
+    gpioExt.digitalWrite(nSLPLPin, LOW);
+    gpioExt.digitalWrite(nSLPRPin, LOW);
 
     BP32.setup(&onConnectedController, &onDisconnectedController);
     Serial.println("Connected, Controller");
@@ -175,16 +220,46 @@ void setup() {
     BP32.forgetBluetoothKeys();
 
     BP32.enableVirtualDevice(false);
+
+    qtrArray.setTypeRC();
+  // Ours is an RC-type (digital) array
+    qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
+    qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
+    Serial.println("Starting Calibration");
+    for (int i = 0; i < 400; i++) {
+        qtrArray.calibrate();
+    }
+    // This is the calibration loop that will store min/max values
+    // Takes about 10 seconds to complete. while calibrating, move the
+    // sensor array over full range of color that it will see.
+    Serial.println("Calibration Completed");
+    
+    pwmDutyCycle = (10);
+    digitalWrite(leftMotorDIRPin, FWD);
+    digitalWrite(rightMotorDIRPin, FWD);
 }
 
 
 void loop() {
   // put your main code here, to run repeatedly:
     //SensorParseData();
-    gpioExt.digitalWrite(GPB2, HIGH);
-    bool dataUpdated = BP32.update();
-    if (dataUpdated)
-        Serial.println("Controller Data Updated");
-        processControllers();
-  delay(150);
+    //gpioExt.digitalWrite(GPB2, HIGH);
+
+    if (k <= 1300){
+        gpioExt.digitalWrite(nSLPLPin, HIGH);
+        gpioExt.digitalWrite(nSLPRPin, HIGH);
+        Serial.print(k);
+        Serial.println(" | Running Loop");
+        pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+        ledcWrite(0, pwmGoLowCount);
+        ledcWrite(2, pwmGoLowCount);
+        lineLED();  
+    }
+    
+    else{
+        ledcWrite(0, 0);
+        ledcWrite(2, 0);
+    }
+
+    k++;
 }
