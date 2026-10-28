@@ -1,3 +1,4 @@
+/*
 void setServoPosition(int angle) {
   angle = constrain(angle, 0, 148);
   if ((angle >= 0) && (angle <= 148)) {
@@ -9,3 +10,4 @@ void setServoPosition(int angle) {
   }
   delay(50);
 }
+*/

@@ -1,3 +1,4 @@
+/*
 int xAxis;
 
 void LeftparseControllerData(ControllerPtr ctl) {
@@ -8,7 +9,7 @@ void LeftparseControllerData(ControllerPtr ctl) {
   if(ctl->b()){
     // eventually used to add close claw functionality
   }
-  */
+
   Serial.print(ctl->axisY());
   Serial.println(" Y-Axis");
   if(ctl->axisY() >= 10){    
@@ -65,3 +66,4 @@ void RightparseControllerData(ControllerPtr ctl) {
     gpioExt.digitalWrite(nSLPRPin, LOW);
   }
 } 
+*/

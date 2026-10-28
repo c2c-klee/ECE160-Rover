@@ -3,7 +3,7 @@ void SensorParseData() {
     Serial.print(gpioExt.digitalRead(gpioExtPins[i]));
     Serial.print(" ");
     if(gpioExt.digitalRead(gpioExtPins[i]) == 0){
-      disableControllers();
+      //disableControllers();
     }
     else {
       // do nothing

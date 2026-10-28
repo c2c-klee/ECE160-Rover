@@ -38,6 +38,13 @@
 int bumperValue = 0;
 int k = 0;
 
+int pos;
+int error;
+int turnFix = 1;
+
+int leftSpeed;
+int rightSpeed;
+
 
   // the PWM signal will go high at a count value of 0
 const int pwm0DegCount = 0.000001 * minPW * SERVO_FREQ * pow(2, pca9685PwmBits);
@@ -48,7 +55,8 @@ int angleCount;
 Adafruit_PWMServoDriver pwmExt = Adafruit_PWMServoDriver(0x40);
 
 const int motorPwmMaxCount = pow(2, motorPwmBits);
-int pwmGoLowCount;
+int pwmGoLowCountLeft;
+int pwmGoLowCountRight;
 int pwmDutyCycle = 0;
 
 int leftDirection;
@@ -64,8 +72,9 @@ int gpioExtPins[6] = { GPA0, GPA1, GPA2, GPA3, GPA4, GPA5 };
 
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
-const uint8_t sensorPins[] = { 26, 27, 4, 16, 17, 18, 19, 23 };  // ESP32 Pins for line sensor on robot
+const uint8_t sensorPins[] = {26, 27, 4, 16, 17, 18, 19, 23};  // ESP32 Pins for line sensor on robot
 QTRSensors qtrArray;
+
 // Create a sensor array object of class QTRSensors
 uint16_t sensorValues[nSensors];            // Store raw sensor values in an array
 uint16_t sensorValuesCalibrated[nSensors];  //Store calibrated sensor values in an array
@@ -106,7 +115,7 @@ void onDisconnectedController(ControllerPtr ctl) {
         Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
     }
 }
-
+/*
 void disableControllers() {
     pwmDutyCycle = 25;
     gpioExt.digitalWrite(nSLPLPin, HIGH);
@@ -125,15 +134,15 @@ void disableControllers() {
     delay(1000);
     loop();
 }
+*/
 
-
-
+/*
 void processControllers() {
     for (auto myController : myControllers) {
         if (myController && myController->isConnected() && myController->hasData()) {
             if (myController->isGamepad()) {
-                LeftparseControllerData(myController);
-                RightparseControllerData(myController);
+                //LeftparseControllerData(myController);
+                //RightparseControllerData(myController);
                 Serial.println("Controller Testing");
             } else if (myController->isMouse()) {
                 //processMouse(myController);
@@ -147,15 +156,16 @@ void processControllers() {
         }
     }
 }
+*/
 
 void lineLED(){
     qtrArray.readCalibrated(sensorValuesCalibrated);
     leftSensorValues = (sensorValuesCalibrated[0]+sensorValuesCalibrated[1]);
     rightSensorValues = (sensorValuesCalibrated[6]+sensorValuesCalibrated[7]);
     combinedSensorValues = (leftSensorValues + rightSensorValues);
-    Serial.print(leftSensorValues);
-    Serial.print(" || ");
-    Serial.println(rightSensorValues);
+    //Serial.print(leftSensorValues);
+    //Serial.print(" || ");
+    //Serial.println(rightSensorValues);
     if (leftSensorValues > 200 && rightSensorValues > 200){
         gpioExt.digitalWrite(GPB2, HIGH);
         gpioExt.digitalWrite(GPB3, HIGH);
@@ -175,6 +185,40 @@ void lineLED(){
         gpioExt.digitalWrite(GPB3, LOW);
         gpioExt.digitalWrite(GPB2, LOW);
     }
+}
+
+
+void followLine(){
+    pos = qtrArray.readLineWhite(sensorValuesCalibrated);
+    error = (pos - 3500) * turnFix;
+
+    Serial.print("ERROR ");
+    Serial.println(error);
+
+    Serial.print("POS ");
+    Serial.println(pos);
+
+    leftSpeed = constrain(pwmDutyCycle - error / 200, -pwmDutyCycle, pwmDutyCycle);
+    rightSpeed = constrain(pwmDutyCycle + error / 200, -pwmDutyCycle, pwmDutyCycle);
+
+    pwmGoLowCountLeft = 0.01 * leftSpeed * motorPwmMaxCount;
+    pwmGoLowCountRight = 0.01 * rightSpeed * motorPwmMaxCount;
+    
+    if(leftSensorValues < 400 || rightSensorValues < 400) {
+        leftSpeed = pwmDutyCycle;
+        rightSpeed = pwmDutyCycle;
+    }
+    
+    ledcWrite(0, pwmGoLowCountLeft);
+    ledcWrite(2, pwmGoLowCountRight);
+
+    Serial.print(leftSpeed);
+    Serial.print(" || ");
+    Serial.println(rightSpeed);
+    Serial.println(leftSensorValues);
+    Serial.println(rightSensorValues);
+
+
 }
 
 void setup() {
@@ -210,7 +254,7 @@ void setup() {
     pwmExt.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
     pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
 
-    setServoPosition(120);
+    //setServoPosition(120);
     gpioExt.digitalWrite(nSLPLPin, LOW);
     gpioExt.digitalWrite(nSLPRPin, LOW);
 
@@ -222,6 +266,7 @@ void setup() {
     BP32.enableVirtualDevice(false);
 
     qtrArray.setTypeRC();
+
   // Ours is an RC-type (digital) array
     qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
     qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
@@ -234,10 +279,11 @@ void setup() {
     // sensor array over full range of color that it will see.
     Serial.println("Calibration Completed");
     
-    pwmDutyCycle = (10);
+    pwmDutyCycle = (20);
     digitalWrite(leftMotorDIRPin, FWD);
     digitalWrite(rightMotorDIRPin, FWD);
 }
+
 
 
 void loop() {
@@ -245,15 +291,13 @@ void loop() {
     //SensorParseData();
     //gpioExt.digitalWrite(GPB2, HIGH);
 
-    if (k <= 1300){
+    if (k <= 13000){
         gpioExt.digitalWrite(nSLPLPin, HIGH);
         gpioExt.digitalWrite(nSLPRPin, HIGH);
-        Serial.print(k);
-        Serial.println(" | Running Loop");
-        pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-        ledcWrite(0, pwmGoLowCount);
-        ledcWrite(2, pwmGoLowCount);
-        lineLED();  
+        //Serial.print(k);
+        //Serial.println(" | Running Loop");
+        lineLED();
+        followLine(); 
     }
     
     else{
