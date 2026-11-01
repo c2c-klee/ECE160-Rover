@@ -42,6 +42,9 @@ int pos;
 int error;
 int turnFix = 1;
 
+int angleStart = 8;
+int angleBall = 148;
+
 int leftSpeed;
 int rightSpeed;
 
@@ -82,6 +85,9 @@ uint16_t sensorValuesCalibrated[nSensors];  //Store calibrated sensor values in 
 int leftSensorValues = 0;
 int rightSensorValues = 0;
 int combinedSensorValues = 0;
+
+bool spinning = false;
+int spinTime = 0;
 
 void onConnectedController(ControllerPtr ctl) {
   bool foundEmptySlot = false;
@@ -158,7 +164,7 @@ void processControllers() {
 }
 
 
-void lineLED(){
+/*void lineLED(){
     qtrArray.readCalibrated(sensorValuesCalibrated);
     leftSensorValues = (sensorValuesCalibrated[0]+sensorValuesCalibrated[1]);
     rightSensorValues = (sensorValuesCalibrated[6]+sensorValuesCalibrated[7]);
@@ -178,7 +184,7 @@ void lineLED(){
 }
 
 
-void followLine(){
+//void followLine(){
     pos = qtrArray.readLineWhite(sensorValuesCalibrated);
     error = (pos - 3500) * turnFix;
 
@@ -210,7 +216,7 @@ void followLine(){
 
 
 }
-
+*/
 void setup() {
     Serial.begin(112500);
     Serial.println("Debug Comms Open");
@@ -255,19 +261,20 @@ void setup() {
 
     BP32.enableVirtualDevice(false);
 
-    qtrArray.setTypeRC();
+
+//    qtrArray.setTypeRC();
 
   // Ours is an RC-type (digital) array
-    qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
-    qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
-    Serial.println("Starting Calibration");
-    for (int i = 0; i < 400; i++) {
-        qtrArray.calibrate();
+//    qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
+//    qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
+//    Serial.println("Starting Calibration");
+//    for (int i = 0; i < 400; i++) {
+//        qtrArray.calibrate();
     }
     // This is the calibration loop that will store min/max values
     // Takes about 10 seconds to complete. while calibrating, move the
     // sensor array over full range of color that it will see.
-    Serial.println("Calibration Completed");
+//    Serial.println("Calibration Completed");
     
     pwmDutyCycle = (23);
     digitalWrite(leftMotorDIRPin, FWD);
@@ -288,7 +295,6 @@ void loop() {
         //Serial.println(" | Running Loop");
         lineLED();
         followLine(); 
-        if ()
     }
     
     else{
