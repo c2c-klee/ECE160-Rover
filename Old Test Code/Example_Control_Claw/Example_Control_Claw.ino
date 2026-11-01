@@ -16,7 +16,7 @@ int angleCount;
 //Create PWM extender object at I2C address 0x40
 Adafruit_PWMServoDriver pwmExt = Adafruit_PWMServoDriver(0x40);
 void setup() {
-  Serial.begin(57600);
+  Serial.begin(115200);
   Serial.println("Enter the claw servo angle in degrees from 0-180:");
   // commands to initialize the PCA9685 PWM extender
   pwmExt.begin();
@@ -40,3 +40,5 @@ void loop() {
 }
  /// Max amount to shut claw is 148
  /// Map and COnstrain could be added 
+ ////shut claw with golf ball is 148 && open claw is 8
+ 
