@@ -136,7 +136,7 @@ void disableControllers() {
 }
 */
 
-/*
+
 void processControllers() {
     for (auto myController : myControllers) {
         if (myController && myController->isConnected() && myController->hasData()) {
@@ -156,7 +156,7 @@ void processControllers() {
         }
     }
 }
-*/
+
 
 void lineLED(){
     qtrArray.readCalibrated(sensorValuesCalibrated);
@@ -166,19 +166,9 @@ void lineLED(){
     //Serial.print(leftSensorValues);
     //Serial.print(" || ");
     //Serial.println(rightSensorValues);
-    if (leftSensorValues > 200 && rightSensorValues > 200){
+    if (leftSensorValues < 600 || rightSensorValues < 600){
         gpioExt.digitalWrite(GPB2, HIGH);
         gpioExt.digitalWrite(GPB3, HIGH);
-
-    }
-    else if (leftSensorValues > 200) {
-        gpioExt.digitalWrite(GPB2, HIGH);
-        gpioExt.digitalWrite(GPB3, LOW);
-
-    }
-    else if (rightSensorValues > 200) {
-        gpioExt.digitalWrite(GPB3, HIGH);
-        gpioExt.digitalWrite(GPB2, LOW);
 
     }
     else {
@@ -198,11 +188,11 @@ void followLine(){
     Serial.print("POS ");
     Serial.println(pos);
 
-    leftSpeed = constrain(pwmDutyCycle - error / 200, -pwmDutyCycle, pwmDutyCycle);
-    rightSpeed = constrain(pwmDutyCycle + error / 200, -pwmDutyCycle, pwmDutyCycle);
+    leftSpeed = constrain(pwmDutyCycle + error / 210, -pwmDutyCycle, pwmDutyCycle);
+    rightSpeed = constrain(pwmDutyCycle - error / 210, -pwmDutyCycle, pwmDutyCycle);
 
     pwmGoLowCountLeft = 0.01 * leftSpeed * motorPwmMaxCount;
-    pwmGoLowCountRight = 0.01 * rightSpeed * motorPwmMaxCount;
+    pwmGoLowCountRight = 0.01 * rightSpeed * motorPwmMaxCount * calibratedMotorFac;
     
     if(leftSensorValues < 400 || rightSensorValues < 400) {
         leftSpeed = pwmDutyCycle;
@@ -279,7 +269,7 @@ void setup() {
     // sensor array over full range of color that it will see.
     Serial.println("Calibration Completed");
     
-    pwmDutyCycle = (20);
+    pwmDutyCycle = (23);
     digitalWrite(leftMotorDIRPin, FWD);
     digitalWrite(rightMotorDIRPin, FWD);
 }
@@ -298,6 +288,7 @@ void loop() {
         //Serial.println(" | Running Loop");
         lineLED();
         followLine(); 
+        if ()
     }
     
     else{

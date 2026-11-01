@@ -10,16 +10,18 @@ void SetClawPositionParse() {
     }
 }
 bool spinning = false;
-int SpinTime = 0;
+int spinTime = 0;
 void ShotPutParseData() {
-  if (!spinning <= 3 && ctl->y()) {
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+
+  if (!spinning && spinTime <= 3 && ctl->y()) {
     pwmDutyCycle = 100;
     spinning = true;
     ledcWrite(rightMotorPWMPin, pwmDutyCycle);
-    ledcWrite(leftMotorPWMPin, pwmDUtyCycle
-    );
+    ledcWrite(leftMotorPWMPin, pwmDutyCycle);
     digitalWrite(leftMotorDIRPin, REV);
-    gpioExt.digitalWrite(nSLPRPin, FWD);
+    digitalWrite(rightMotorDIRPin, FWD);
 
     spinTime++;
   }
