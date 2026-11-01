@@ -1,3 +1,32 @@
+void SetClawPositionParse() { 
+  bool foundController = true;
+    if (ctl->a()){
+      pwmEXT.setPWM(clawServoNum, ON_COUNT, angleStart);
+    }
+    else if (ctl->b()) {
+      pwmEXT.setPWM(clawServoNum, ON_COUNT, angleBall);
+    }
+    else {
+    }
+}
+bool spinning = false;
+int SpinTime = 0;
+void ShotPutParseData() {
+  if (!spinning <= 3 && ctl->y()) {
+    pwmDutyCycle = 100;
+    spinning = true;
+    ledcWrite(rightMotorPWMPin, pwmDutyCycle);
+    ledcWrite(leftMotorPWMPin, pwmDUtyCycle
+    );
+    digitalWrite(leftMotorDIRPin, REV);
+    gpioExt.digitalWrite(nSLPRPin, FWD);
+
+    spinTime++;
+  }
+  else {
+  }
+}
+
 /*
 void setServoPosition(int angle) {
   angle = constrain(angle, 0, 148);
