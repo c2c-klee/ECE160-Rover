@@ -1,17 +1,17 @@
-void SetClawPositionParse() { 
+void SetClawPositionParse(ControllerPtr ctl) { 
   bool foundController = true;
-    if (ctl->a()){
-      pwmEXT.setPWM(clawServoNum, ON_COUNT, angleStart);
+  if (ctl->a()){
+      pwmExt.setPWM(clawServoNum, ON_COUNT, angleStart);
     }
-    else if (ctl->b()) {
-      pwmEXT.setPWM(clawServoNum, ON_COUNT, angleBall);
+  else if (ctl->b()) {
+      pwmExt.setPWM(clawServoNum, ON_COUNT, angleBall);
     }
-    else {
+  else {
     }
 }
 bool spinning = false;
 int spinTime = 0;
-void ShotPutParseData() {
+void ShotPutParseData(ControllerPtr ctl) {
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   gpioExt.digitalWrite(nSLPLPin, HIGH);
 
