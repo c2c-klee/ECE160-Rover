@@ -285,7 +285,7 @@ void loop() {
     gpioExt.digitalWrite(nSLPLPin, HIGH);
     gpioExt.digitalWrite(nSLPRPin, HIGH);
     delay(100);
-    if(combinedSensorValues < 2400 && k > 12){
+    if(combinedSensorValues < 2400 && k > 6){
         leftSensorValues = 1000;
         rightSensorValues = 1000;
         delay(1000);
