@@ -42,12 +42,10 @@ int pos;
 int error;
 int turnFix = 1;
 
-int angleStart = 8;
-int angleBall = 148;
-
 int leftSpeed;
 int rightSpeed;
-
+int angleStart;
+int angleBall;
 
   // the PWM signal will go high at a count value of 0
 const int pwm0DegCount = 0.000001 * minPW * SERVO_FREQ * pow(2, pca9685PwmBits);
@@ -85,9 +83,6 @@ uint16_t sensorValuesCalibrated[nSensors];  //Store calibrated sensor values in 
 int leftSensorValues = 0;
 int rightSensorValues = 0;
 int combinedSensorValues = 0;
-
-bool spinning = false;
-int spinTime = 0;
 
 void onConnectedController(ControllerPtr ctl) {
   bool foundEmptySlot = false;
@@ -164,28 +159,11 @@ void processControllers() {
 }
 
 
-/*void lineLED(){
-    qtrArray.readCalibrated(sensorValuesCalibrated);
-    leftSensorValues = (sensorValuesCalibrated[0]+sensorValuesCalibrated[1]);
-    rightSensorValues = (sensorValuesCalibrated[6]+sensorValuesCalibrated[7]);
-    combinedSensorValues = (leftSensorValues + rightSensorValues);
-    //Serial.print(leftSensorValues);
-    //Serial.print(" || ");
-    //Serial.println(rightSensorValues);
-    if (leftSensorValues < 600 || rightSensorValues < 600){
-        gpioExt.digitalWrite(GPB2, HIGH);
-        gpioExt.digitalWrite(GPB3, HIGH);
-
-    }
-    else {
-        gpioExt.digitalWrite(GPB3, LOW);
-        gpioExt.digitalWrite(GPB2, LOW);
-    }
-}
 
 
-//void followLine(){
+void followLine(){
     pos = qtrArray.readLineWhite(sensorValuesCalibrated);
+    combinedSensorValues = (sensorValuesCalibrated[0]+sensorValuesCalibrated[1]+sensorValuesCalibrated[2]+sensorValuesCalibrated[3]+sensorValuesCalibrated[4]+sensorValuesCalibrated[5]+sensorValuesCalibrated[6]+sensorValuesCalibrated[7]);
     error = (pos - 3500) * turnFix;
 
     Serial.print("ERROR ");
@@ -194,8 +172,8 @@ void processControllers() {
     Serial.print("POS ");
     Serial.println(pos);
 
-    leftSpeed = constrain(pwmDutyCycle + error / 210, -pwmDutyCycle, pwmDutyCycle);
-    rightSpeed = constrain(pwmDutyCycle - error / 210, -pwmDutyCycle, pwmDutyCycle);
+    leftSpeed = constrain(pwmDutyCycle + error / 185, -pwmDutyCycle, pwmDutyCycle);
+    rightSpeed = constrain(pwmDutyCycle - error / 185, -pwmDutyCycle, pwmDutyCycle);
 
     pwmGoLowCountLeft = 0.01 * leftSpeed * motorPwmMaxCount;
     pwmGoLowCountRight = 0.01 * rightSpeed * motorPwmMaxCount * calibratedMotorFac;
@@ -208,15 +186,24 @@ void processControllers() {
     ledcWrite(0, pwmGoLowCountLeft);
     ledcWrite(2, pwmGoLowCountRight);
 
-    Serial.print(leftSpeed);
-    Serial.print(" || ");
-    Serial.println(rightSpeed);
-    Serial.println(leftSensorValues);
-    Serial.println(rightSensorValues);
-
+    //Serial.print(leftSensorValues);
+    //Serial.print(" || ");
+    //Serial.println(rightSensorValues);
 
 }
-*/
+
+void checkLED(){
+    if (leftSensorValues < 375 || rightSensorValues < 375){
+        gpioExt.digitalWrite(GPB2, HIGH);
+        gpioExt.digitalWrite(GPB3, HIGH);
+    }
+    else {
+        gpioExt.digitalWrite(GPB3, LOW);
+        gpioExt.digitalWrite(GPB2, LOW);
+    }
+
+}
+
 void setup() {
     Serial.begin(112500);
     Serial.println("Debug Comms Open");
@@ -261,24 +248,32 @@ void setup() {
 
     BP32.enableVirtualDevice(false);
 
-
-//    qtrArray.setTypeRC();
+    qtrArray.setTypeRC();
 
   // Ours is an RC-type (digital) array
-//    qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
-//    qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
-//    Serial.println("Starting Calibration");
-//    for (int i = 0; i < 400; i++) {
-//        qtrArray.calibrate();
+    qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
+    qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
+    Serial.println("Starting Calibration");
+    for (int i = 0; i < 400; i++) {
+        qtrArray.calibrate();
     }
     // This is the calibration loop that will store min/max values
     // Takes about 10 seconds to complete. while calibrating, move the
     // sensor array over full range of color that it will see.
-//    Serial.println("Calibration Completed");
     
-    pwmDutyCycle = (23);
+    // Blink LEDs after successful Calib
+    Serial.println("Calibration Completed");
+    gpioExt.digitalWrite(GPB2, HIGH);
+    gpioExt.digitalWrite(GPB3, HIGH);
+    delay(500);
+    gpioExt.digitalWrite(GPB2, LOW);
+    gpioExt.digitalWrite(GPB3, LOW);
+    delay(500);
+
+    pwmDutyCycle = (20);
     digitalWrite(leftMotorDIRPin, FWD);
     digitalWrite(rightMotorDIRPin, FWD);
+    
 }
 
 
@@ -287,20 +282,30 @@ void loop() {
   // put your main code here, to run repeatedly:
     //SensorParseData();
     //gpioExt.digitalWrite(GPB2, HIGH);
-
-    if (k <= 13000){
-        gpioExt.digitalWrite(nSLPLPin, HIGH);
-        gpioExt.digitalWrite(nSLPRPin, HIGH);
-        //Serial.print(k);
-        //Serial.println(" | Running Loop");
-        lineLED();
-        followLine(); 
-    }
-    
-    else{
+    gpioExt.digitalWrite(nSLPLPin, HIGH);
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
+    delay(100);
+    if(combinedSensorValues < 2400 && k > 6){
+        leftSensorValues = 1000;
+        rightSensorValues = 1000;
+        delay(1000);
         ledcWrite(0, 0);
         ledcWrite(2, 0);
+        gpioExt.digitalWrite(GPB3, LOW);
+        gpioExt.digitalWrite(GPB2, LOW);
     }
-
-    k++;
+    else if(combinedSensorValues < 2400){
+        leftSensorValues = 1000;
+        rightSensorValues = 1000;
+        k++;
+        gpioExt.digitalWrite(GPB3, LOW);
+        gpioExt.digitalWrite(GPB2, LOW);
+        followLine(); 
+    }
+    else{
+        leftSensorValues = (sensorValuesCalibrated[0]);
+        rightSensorValues = (sensorValuesCalibrated[7]);
+        followLine(); 
+        checkLED();
+    }
 }
