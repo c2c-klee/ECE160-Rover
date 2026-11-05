@@ -19,7 +19,7 @@ void ShotPutParseData(ControllerPtr ctl) {
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   gpioExt.digitalWrite(nSLPLPin, HIGH);
 
-  if (!spinning && spinTime <= 3 && ctl->y()) {
+  if (!spinning && ctl->y()) {
     pwmDutyCycle = 100;
     spinning = true;
     ledcWrite(0, pwmDutyCycle);
@@ -27,7 +27,13 @@ void ShotPutParseData(ControllerPtr ctl) {
     digitalWrite(leftMotorDIRPin, REV);
     digitalWrite(rightMotorDIRPin, FWD);
 
-    spinTime++;
+    delay(3000)
+
+    angleCount = map(angleStart, 0, 148, pwm0DegCount, pwm180DegCount);
+    pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+
+    ledcWrite(0, 0);
+    ledcWrite(2, 0);
   }
   else {
   }
