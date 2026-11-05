@@ -1,14 +1,18 @@
 void SetClawPositionParse(ControllerPtr ctl) { 
   bool foundController = true;
-  if (ctl->a()){
-      pwmExt.setPWM(clawServoNum, ON_COUNT, angleStart);
+  if (ctl->x()){ 
+      angleCount = map(angleStart, 0, 148, pwm0DegCount, pwm180DegCount);
+      pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
     }
   else if (ctl->b()) {
-      pwmExt.setPWM(clawServoNum, ON_COUNT, angleBall);
+      angleCount = map(angleBall, 0, 148, pwm0DegCount, pwm180DegCount);
+      pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
     }
   else {
     }
 }
+
+
 bool spinning = false;
 int spinTime = 0;
 void ShotPutParseData(ControllerPtr ctl) {
@@ -18,8 +22,8 @@ void ShotPutParseData(ControllerPtr ctl) {
   if (!spinning && spinTime <= 3 && ctl->y()) {
     pwmDutyCycle = 100;
     spinning = true;
-    ledcWrite(rightMotorPWMPin, pwmDutyCycle);
-    ledcWrite(leftMotorPWMPin, pwmDutyCycle);
+    ledcWrite(0, pwmDutyCycle);
+    ledcWrite(2, pwmDutyCycle);
     digitalWrite(leftMotorDIRPin, REV);
     digitalWrite(rightMotorDIRPin, FWD);
 
