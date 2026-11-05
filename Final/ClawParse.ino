@@ -1,11 +1,11 @@
 void SetClawPositionParse(ControllerPtr ctl) { 
   bool foundController = true;
   if (ctl->x()){ 
-      angleCount = map(angleStart, 0, 148, pwm0DegCount, pwm180DegCount);
+      angleCount = map(angleStart, 0, angleBall, pwm0DegCount, pwm180DegCount);
       pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
     }
   else if (ctl->b()) {
-      angleCount = map(angleBall, 0, 148, pwm0DegCount, pwm180DegCount);
+      angleCount = map(angleBall, 0, angleBall, pwm0DegCount, pwm180DegCount);
       pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
     }
   else {
@@ -20,14 +20,14 @@ void ShotPutParseData(ControllerPtr ctl) {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
 
   if (!spinning && ctl->y()) {
-    pwmDutyCycle = 100;
+    
     spinning = true;
     ledcWrite(0, pwmDutyCycle);
     ledcWrite(2, pwmDutyCycle);
     digitalWrite(leftMotorDIRPin, REV);
     digitalWrite(rightMotorDIRPin, FWD);
 
-    delay(3000)
+    delay(3000);
 
     angleCount = map(angleStart, 0, 148, pwm0DegCount, pwm180DegCount);
     pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
@@ -36,6 +36,7 @@ void ShotPutParseData(ControllerPtr ctl) {
     ledcWrite(2, 0);
   }
   else {
+    spinning = false;
   }
 }
 

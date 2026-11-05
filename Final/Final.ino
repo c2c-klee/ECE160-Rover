@@ -45,7 +45,7 @@ int turnFix = 1;
 int leftSpeed;
 int rightSpeed;
 int angleStart = 8;
-int angleBall = 148;
+int angleBall = 135;
 
   // the PWM signal will go high at a count value of 0
 const int pwm0DegCount = 0.000001 * minPW * SERVO_FREQ * pow(2, pca9685PwmBits);
@@ -284,6 +284,7 @@ void setup() {
 
 
 void loop() {
+    pwmDutyCycle = 100;
   // put your main code here, to run repeatedly:
     //SensorParseData();
     //gpioExt.digitalWrite(GPB2, HIGH);
