@@ -25,7 +25,7 @@ int pwmDutyCycle = 0;
 //Duty cycle as percentage from 0-100
 Adafruit_MCP23X17 gpioExt;
 void setup() {
-  Serial.begin(57600);
+  Serial.begin(112500);
   Serial.println("Enter the motor duty cycle as a percentage from 0-100:");
   gpioExt.begin_I2C(0x20);
   gpioExt.pinMode(nSLPLPin, OUTPUT);
@@ -37,8 +37,11 @@ void setup() {
   pinMode(leftMotorDIRPin, OUTPUT);
   pinMode(rightMotorPWMPin, OUTPUT);
   pinMode(leftMotorPWMPin, OUTPUT);
-  ledcAttach(rightMotorPWMPin, motorFreq, motorPwmBits);
-  ledcAttach(leftMotorPWMPin, motorFreq, motorPwmBits);
+    ledcSetup(0, motorFreq, motorPwmBits); 
+    ledcAttachPin(rightMotorPWMPin, 0); 
+    ledcSetup(2, motorFreq, motorPwmBits); 
+    ledcAttachPin(leftMotorPWMPin, 2); 
+
 }
 void loop() {
   if (Serial.available() >= 1) {
@@ -52,8 +55,8 @@ void loop() {
     digitalWrite(rightMotorDIRPin, REV);
     digitalWrite(leftMotorDIRPin, REV);
     pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-    ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+   ledcWrite(0, pwmGoLowCount);
+    ledcWrite(2, pwmGoLowCount);
   } else {
     Serial.println("You entered an invalid Duty Cycle: setting it to 0");
     pwmDutyCycle = 0;

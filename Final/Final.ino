@@ -146,8 +146,8 @@ void processControllers() {
     for (auto myController : myControllers) {
         if (myController && myController->isConnected() && myController->hasData()) {
             if (myController->isGamepad()) {
-                LeftparseControllerData(myController);
-                RightparseControllerData(myController);
+                //LeftparseControllerData(myController);
+                //RightparseControllerData(myController);
                 SetClawPositionParse(myController);
                 ShotPutParseData(myController);
                 Serial.println("Controller Testing");
@@ -166,7 +166,7 @@ void processControllers() {
 
 
 
-
+/*
 void followLine(){
     pos = qtrArray.readLineWhite(sensorValuesCalibrated);
     combinedSensorValues = (sensorValuesCalibrated[0]+sensorValuesCalibrated[1]+sensorValuesCalibrated[2]+sensorValuesCalibrated[3]+sensorValuesCalibrated[4]+sensorValuesCalibrated[5]+sensorValuesCalibrated[6]+sensorValuesCalibrated[7]);
@@ -197,7 +197,7 @@ void followLine(){
     //Serial.println(rightSensorValues);
 
 }
-
+*/
 void checkLED(){
     if (leftSensorValues < 375 || rightSensorValues < 375){
         gpioExt.digitalWrite(GPB2, HIGH);
@@ -250,8 +250,8 @@ void setup() {
     pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
 
     //setServoPosition(120);
-    gpioExt.digitalWrite(nSLPLPin, LOW);
-    gpioExt.digitalWrite(nSLPRPin, LOW);
+    //gpioExt.digitalWrite(nSLPLPin, LOW);
+    //gpioExt.digitalWrite(nSLPRPin, LOW);
 
 
   // Ours is an RC-type (digital) array
@@ -292,8 +292,6 @@ void loop() {
     if (dataUpdated)
         processControllers();
 
-    gpioExt.digitalWrite(nSLPLPin, HIGH);
-    gpioExt.digitalWrite(nSLPRPin, HIGH);
     delay(100);
     /*
     if(combinedSensorValues < 2400 && k > 2){
