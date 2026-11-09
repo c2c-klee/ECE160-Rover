@@ -35,9 +35,13 @@
 #define GPB2 10
 #define GPB3 11
 
+#define leftPWMCh 2
+#define rightPWMCh 0
+
 int bumperValue = 0;
 int k = 0;
-
+int linesCrossed = 0;
+bool firstLineCrossed = false;
 int pos;
 int error;
 int turnFix = 1;
@@ -148,8 +152,9 @@ void processControllers() {
             if (myController->isGamepad()) {
                 //LeftparseControllerData(myController);
                 //RightparseControllerData(myController);
-                SetClawPositionParse(myController);
-                ShotPutParseData(myController);
+                //SetClawPositionParse(myController);
+                //ShotPutParseData(myController);
+                longJump(myController);
                 Serial.println("Controller Testing");
             } else if (myController->isMouse()) {
                 //processMouse(myController);
@@ -166,7 +171,7 @@ void processControllers() {
 
 
 
-/*
+
 void followLine(){
     pos = qtrArray.readLineWhite(sensorValuesCalibrated);
     combinedSensorValues = (sensorValuesCalibrated[0]+sensorValuesCalibrated[1]+sensorValuesCalibrated[2]+sensorValuesCalibrated[3]+sensorValuesCalibrated[4]+sensorValuesCalibrated[5]+sensorValuesCalibrated[6]+sensorValuesCalibrated[7]);
@@ -197,7 +202,7 @@ void followLine(){
     //Serial.println(rightSensorValues);
 
 }
-*/
+
 void checkLED(){
     if (leftSensorValues < 375 || rightSensorValues < 375){
         gpioExt.digitalWrite(GPB2, HIGH);
@@ -287,11 +292,11 @@ void loop() {
     pwmDutyCycle = 100;
   // put your main code here, to run repeatedly:
     //SensorParseData();
-    //gpioExt.digitalWrite(GPB2, HIGH);
+    //gpioExt.digitalWrite(GPB2, HIGH);    
     bool dataUpdated = BP32.update();
     if (dataUpdated)
         processControllers();
-
+    
     delay(100);
     /*
     if(combinedSensorValues < 2400 && k > 2){
