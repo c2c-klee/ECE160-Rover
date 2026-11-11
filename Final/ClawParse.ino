@@ -1,10 +1,10 @@
 void SetClawPositionParse(ControllerPtr ctl) {
   bool foundController = true;
   if (ctl->x()) {
-    angleCount = map(angleStart, 0, angleBall, pwm0DegCount, pwm180DegCount);
+    angleCount = map(angleStart, 0, 180, pwm0DegCount, pwm180DegCount);
     pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
   } else if (ctl->b()) {
-    angleCount = map(angleBall, 0, angleBall, pwm0DegCount, pwm180DegCount);
+    angleCount = map(angleBall, 0, 180, pwm0DegCount, pwm180DegCount);
     pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
   } else {
   }
@@ -33,7 +33,7 @@ bool spinning = false;
 int spinTime = 0;
 
 void ShotPutParseData(ControllerPtr ctl) {
-  if (ctl->y() && (encoderCount <= 3000)) {
+  if (ctl->y() && (encoderCount <= 4812)) {
     triggerRightEncoder();
     triggerLeftEncoder();
     encoderCount = encoderRcount + encoderLcount;
@@ -47,10 +47,15 @@ void ShotPutParseData(ControllerPtr ctl) {
     digitalWrite(leftMotorDIRPin, REV);
     digitalWrite(rightMotorDIRPin, FWD);
     Serial.print(encoderCount);
-    angleCount = map(angleStart, 0, 180, pwm0DegCount, pwm180DegCount);
-    pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+    if (encoderCount > 4812) {
+      angleCount = map(angleStart, 0, 180, pwm0DegCount, pwm180DegCount);
+      pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+    }
+    else {
+      angleCount = map(angleBall, 0, 180, pwm0DegCount, pwm180DegCount);
+      pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+    }
   }
-    
   else {
     spinning = false ;
       ledcWrite(0, 0);

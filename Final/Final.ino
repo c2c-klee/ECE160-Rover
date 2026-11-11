@@ -229,7 +229,9 @@ void setup() {
   pinMode(encoderRBPin, INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(encoderRBPin), triggerRightEncoder, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderLBPin), triggerLeftEncoder, RISING);
-
+  encoderRcount = 0;
+  encoderLcount = 0;
+  encoderCount = 0;
 
   BP32.setup(&onConnectedController, &onDisconnectedController);
 
