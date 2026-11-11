@@ -1,10 +1,3 @@
-<<<<<<< Updated upstream
-
-//just a thought should we add a lineup function so it lines up to the line same way each time? like detects too
-/* If "Y" pressed then enter 'Shotput' mode and grips claw and spins 3 times waits 10 milliseconds and releases and stops after 3.5 spins
- */
-  // the PWM signal will go high at a count value of 0
-=======
 void readEncoders() {
   encoderRdir = digitalRead(encoderRAPin);
   encoderLdir = digitalRead(encoderLAPin);
@@ -31,8 +24,7 @@ void shotPut() {
     if(encoderCount > 4182){
       break;
     }
-    angleCount = map(angleBall, 0, 180, pwm0DegCount, pwm180DegCount);
-    pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+
     pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
     ledcWrite(0, pwmGoLowCount);
     ledcWrite(2, pwmGoLowCount);
@@ -47,4 +39,3 @@ void shotPut() {
 
 }
 
->>>>>>> Stashed changes
