@@ -36,9 +36,9 @@ void ShotPutParseData(ControllerPtr ctl) {
   triggerRightEncoder();
   triggerLeftEncoder();
   encoderCount = encoderRcount + encoderLcount;
-
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
+   if (ctl->y()) {
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
+    gpioExt.digitalWrite(nSLPLPin, HIGH);
     spinning = true;
     pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
     ledcWrite(0, pwmGoLowCount);
@@ -46,12 +46,13 @@ void ShotPutParseData(ControllerPtr ctl) {
     digitalWrite(leftMotorDIRPin, REV);
     digitalWrite(rightMotorDIRPin, FWD);
     Serial.print(encoderCount);
-    if (encoderCount >= 10000){
+    if (encoderCount >= 1000){
       angleCount = map(angleStart, 0, 180, pwm0DegCount, pwm180DegCount);
       pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
       ledcWrite(0, 0);
       ledcWrite(2, 0);
     }
+   }
     else {
       spinning = false;
     }

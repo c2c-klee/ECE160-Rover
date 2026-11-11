@@ -45,7 +45,7 @@ long encoderRcount = 0;
 long encoderLcount = 0;
 bool encoderRdir, encoderLdir;
 
-int encoderCount = encoderRcount + encoderLcount;
+int encoderCount = encoderRcount + encoderLcount;   //Combines Left and Right Encoder Values
 
 int bumperValue = 0;
 int k = 0;
