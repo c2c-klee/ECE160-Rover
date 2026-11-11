@@ -33,10 +33,11 @@ bool spinning = false;
 int spinTime = 0;
 
 void ShotPutParseData(ControllerPtr ctl) {
-  triggerRightEncoder();
-  triggerLeftEncoder();
-  encoderCount = encoderRcount + encoderLcount;
-   if (ctl->y()) {
+  if (ctl->y() && (encoderCount <= 3000)) {
+    triggerRightEncoder();
+    triggerLeftEncoder();
+    encoderCount = encoderRcount + encoderLcount;
+
     gpioExt.digitalWrite(nSLPRPin, HIGH);
     gpioExt.digitalWrite(nSLPLPin, HIGH);
     spinning = true;
@@ -46,17 +47,16 @@ void ShotPutParseData(ControllerPtr ctl) {
     digitalWrite(leftMotorDIRPin, REV);
     digitalWrite(rightMotorDIRPin, FWD);
     Serial.print(encoderCount);
-    if (encoderCount >= 1000){
-      angleCount = map(angleStart, 0, 180, pwm0DegCount, pwm180DegCount);
-      pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+    angleCount = map(angleStart, 0, 180, pwm0DegCount, pwm180DegCount);
+    pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+  }
+    
+  else {
+    spinning = false ;
       ledcWrite(0, 0);
       ledcWrite(2, 0);
-    }
-   }
-    else {
-      spinning = false;
-    }
   }
+}
 
 /*
 void setServoPosition(int angle) {
