@@ -1,8 +1,38 @@
+/*
+void disableControllers() {
+    pwmDutyCycle = 25;
+    gpioExt.digitalWrite(nSLPLPin, HIGH);
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
+    digitalWrite(rightMotorDIRPin, REV);
+    digitalWrite(leftMotorDIRPin, REV);
+    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(2, pwmGoLowCount);
+    ledcWrite(0, pwmGoLowCount);
+    Serial.println(pwmDutyCycle);
 
-int xAxis;
+    delay(2000);
+    gpioExt.digitalWrite(nSLPLPin, LOW);
+    gpioExt.digitalWrite(nSLPRPin, LOW);
+    setServoPosition(10);
+    delay(1000);
+    loop();
+}
+*/
 
+void parseControllers(ControllerPtr ctl){
+  // Buttons First
+  if(ctl->l1()) {
+    openClaw();
+  } else if(ctl->r1()) {
+    closeClaw();
+  } else if(ctl->y()) {
+    encoderCount = 0;
+    shotPut();
+  }
+}
+
+/*
 void LeftparseControllerData(ControllerPtr ctl) {
-
   Serial.print(ctl->axisY());
   Serial.println(" Y-Axis");
   if(ctl->axisY() >= 10){    
@@ -59,3 +89,4 @@ void RightparseControllerData(ControllerPtr ctl) {
     //gpioExt.digitalWrite(nSLPRPin, LOW);
   }
 } 
+*/
