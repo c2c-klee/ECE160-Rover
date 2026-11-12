@@ -39,7 +39,7 @@ void checkLED() {
 }
 
 void parseLineFollow() {
-    /*
+  /*
     if(combinedSensorValues < 2400 && k > 2){
         leftSensorValues = 1000;
         rightSensorValues = 1000;
@@ -64,4 +64,5 @@ void parseLineFollow() {
         checkLED();
     }
     */
-}z
+}
+z

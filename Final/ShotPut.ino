@@ -5,7 +5,8 @@ void readEncoders() {
     encoderRcount--;
   } else {
     encoderRcount++;
-  } if (encoderLdir == 1) {
+  }
+  if (encoderLdir == 1) {
     encoderLcount--;
   } else {
     encoderLcount++;
@@ -18,10 +19,10 @@ void shotPut() {
   pwmDutyCycle = 100;
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   gpioExt.digitalWrite(nSLPLPin, HIGH);
-  
-  while(true){
+
+  while (true) {
     readEncoders();
-    if(encoderCount > 4182){
+    if (encoderCount > 4182) {
       break;
     }
 
@@ -31,11 +32,9 @@ void shotPut() {
     digitalWrite(leftMotorDIRPin, REV);
     digitalWrite(rightMotorDIRPin, FWD);
   }
-  
+
   angleCount = map(angleStart, 0, 180, pwm0DegCount, pwm180DegCount);
   pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
   ledcWrite(0, 0);
   ledcWrite(2, 0);
-
 }
-

@@ -2,10 +2,9 @@ void SensorParseData() {
   for (int i = 5; i > -1; i--) {
     Serial.print(gpioExt.digitalRead(gpioExtPins[i]));
     Serial.print(" ");
-    if(gpioExt.digitalRead(gpioExtPins[i]) == 0){
+    if (gpioExt.digitalRead(gpioExtPins[i]) == 0) {
       //disableControllers();
-    }
-    else {
+    } else {
       // do nothing
     }
   }

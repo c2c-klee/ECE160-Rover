@@ -1,13 +1,13 @@
-void longJump(ControllerPtr ctl){
+void longJump(ControllerPtr ctl) {
   qtrArray.readCalibrated(sensorValuesCalibrated);
-  combinedSensorValues = (sensorValuesCalibrated[0]+sensorValuesCalibrated[1]+sensorValuesCalibrated[2]+sensorValuesCalibrated[3]+sensorValuesCalibrated[4]+sensorValuesCalibrated[5]+sensorValuesCalibrated[6]+sensorValuesCalibrated[7]);
+  combinedSensorValues = (sensorValuesCalibrated[0] + sensorValuesCalibrated[1] + sensorValuesCalibrated[2] + sensorValuesCalibrated[3] + sensorValuesCalibrated[4] + sensorValuesCalibrated[5] + sensorValuesCalibrated[6] + sensorValuesCalibrated[7]);
   digitalWrite(leftMotorDIRPin, FWD);
   digitalWrite(rightMotorDIRPin, FWD);
   pwmGoLowCount = 0.01 * 18 * motorPwmMaxCount;
   Serial.print(combinedSensorValues);
   Serial.print(" || ");
   Serial.println(linesCrossed);
-  
+
 
   if (combinedSensorValues < 2400) {
     linesCrossed++;
@@ -19,7 +19,7 @@ void longJump(ControllerPtr ctl){
     gpioExt.digitalWrite(GPB3, LOW);
   }
 
-  if (firstLineCrossed == false){
+  if (firstLineCrossed == false) {
     gpioExt.digitalWrite(GPB2, HIGH);
     gpioExt.digitalWrite(GPB3, HIGH);
     delay(200);
@@ -28,7 +28,7 @@ void longJump(ControllerPtr ctl){
     delay(200);
   }
 
-  if (linesCrossed < 3){
+  if (linesCrossed < 3) {
     ledcWrite(0, pwmGoLowCount);
     ledcWrite(2, pwmGoLowCount);
   }
@@ -40,6 +40,4 @@ void longJump(ControllerPtr ctl){
     gpioExt.digitalWrite(GPB2, HIGH);
     gpioExt.digitalWrite(GPB3, HIGH);
   }
-
-  
 }
