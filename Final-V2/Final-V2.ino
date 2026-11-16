@@ -1,4 +1,15 @@
-// TEAM HERCULES - FINAL CODEBASE, REVISION v30.01
+/* Final-V2.ino
+* GITHUB REPO: https://github.com/c2c-klee/ECE160-Rover
+* Description: The main file for our robot. Includes all pre-definition statements, variable definitions, top-level functions (loop/setup), 
+*   and controller parsing code via Bluepad.
+* Author: Kendrick Lee & Braylen Pridemore
+* Last Revision: 11/15/2026 @ 7:00PM
+* Hardware Used: (x1) Pololu Chassis Kit for TI-RSLK MAX, (x1) Custom Adapter Board for the ESP-32 from TI-RSLK MAX rover, (various) i2C Extension Devices for GPIO & PWM GPIO
+* 
+* Major Functions: setup() - Init. Code, onConnectedController() - update Bluepad API when new controller connected,
+*   onDisconnectedController() - update Bluepad AI when existing controller disconnected, processControllers() - run controller-based 
+*   functionality whenever controller data updated, loop() - when controller data updated, run processControllers().
+*/
 
 #include <Adafruit_MCP23X17.h>
 #include <Bluepad32.h>
@@ -60,10 +71,10 @@ bool encoderRdir, encoderLdir;
 long encoderRcount = 0;
 long encoderLcount = 0;
 int encoderCount = encoderRcount + encoderLcount;  //Combines Left and Right Encoder Values
+int currentEncoderCount = 4000;
 
 // BUMPER
 int bumperValue = 0;
-int k = 0;
 int linesCrossed = 0;
 bool firstLineCrossed = false;
 
@@ -73,7 +84,7 @@ int gpioExtPins[6] = { GPA0, GPA1, GPA2, GPA3, GPA4, GPA5 };
 
 // DEFINE ANGLES FOR CLAWS
 int angleStart = 8;
-int angleBall = 135;
+int angleBall = 150;
 
 // SERVO CALCULATIONS FOR PWM
 const int pwm0DegCount = 0.000001 * minPW * SERVO_FREQ * pow(2, pca9685PwmBits);
@@ -106,6 +117,9 @@ int pwmGoLowCountLeft;
 int pwmGoLowCountRight;
 int pwmGoLowCount;
 int pwmDutyCycle = 0;
+int pwmDutyCycleLeft = 0;
+int pwmDutyCycleRight = 0;
+
 
 // CALIBRATED MOTOR SPEED COEFF.
 float calibratedMotorFac = 0.9682;
@@ -113,14 +127,20 @@ float calibratedMotorFac = 0.9682;
 // INIT CONTROLLER
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
+// Long Jump
+bool manualLineOverride;
+int jumpSpeed;
+
+bool manualMode = false;
+
 // BLUEPAD INIT
 void onConnectedController(ControllerPtr ctl) {
-  bool foundEmptySlot = false;
+  bool foundEmptySlot = false; // take priority, do not allow simultaneous connections
   for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
     if (myControllers[i] == nullptr) {
       Serial.print("Controller is connected, index: ");
       Serial.println(i);
-
+      // print debug info to the serial monitor
       ControllerProperties properties = ctl->getProperties();
       Serial.print("Controller Model: ");
       Serial.print(ctl->getModelName().c_str());
@@ -132,6 +152,7 @@ void onConnectedController(ControllerPtr ctl) {
   }
 }
 
+// DEBIND CONTROLLER FROM ARRAY IF DISCONNECTED
 void onDisconnectedController(ControllerPtr ctl) {
   bool foundController = false;
   for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
@@ -147,13 +168,18 @@ void onDisconnectedController(ControllerPtr ctl) {
   }
 }
 
-
+// Propogate controller data to individual functions
 void processControllers() {
   for (auto myController : myControllers) {
     if (myController && myController->isConnected() && myController->hasData()) {
       if (myController->isGamepad()) {
+        // Separate function to determine what mode to enter (or what event)
         parseControllers(myController);
-        Serial.println("Controller Testing");
+        // If manual mode is true, execute soccer functionality ONLY.
+        if (manualMode == true) {
+          soccerParseL(myController);
+          soccerParseR(myController);
+        }
       } else {
         Serial.println("Unsupported controller");
       }
@@ -162,81 +188,88 @@ void processControllers() {
 }
 
 void setup() {
-    Serial.begin(112500);
-    Serial.println("SYSTEM INIT");
+  Serial.begin(112500);
+  Serial.println("SYSTEM INIT");
 
-    BP32.setup(&onConnectedController, &onDisconnectedController);
-    BP32.forgetBluetoothKeys();
-    BP32.enableVirtualDevice(false);
+  // Bluepad INIT first
+  BP32.setup(&onConnectedController, &onDisconnectedController);
+  BP32.forgetBluetoothKeys();
+  BP32.enableVirtualDevice(false);
 
-    pinMode(encoderLAPin, INPUT_PULLDOWN);
-    pinMode(encoderRAPin, INPUT_PULLDOWN);
-    pinMode(encoderLBPin, INPUT_PULLDOWN);
-    pinMode(encoderRBPin, INPUT_PULLDOWN);
-    attachInterrupt(digitalPinToInterrupt(encoderRBPin), readEncoders, RISING);
-    attachInterrupt(digitalPinToInterrupt(encoderLBPin), readEncoders, RISING);
+  // Encoder Setup
+  pinMode(encoderLAPin, INPUT_PULLDOWN);
+  pinMode(encoderRAPin, INPUT_PULLDOWN);
+  pinMode(encoderLBPin, INPUT_PULLDOWN);
+  pinMode(encoderRBPin, INPUT_PULLDOWN);
+  attachInterrupt(digitalPinToInterrupt(encoderRBPin), readEncoders, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoderLBPin), readEncoders, RISING);
 
-    // i2C GPIO Ext
-    gpioExt.begin_I2C(0x20);
-    gpioExt.pinMode(nSLPLPin, OUTPUT);
-    gpioExt.pinMode(nSLPRPin, OUTPUT);
-    for (int i = 0; i < 6; i++) {
-      gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
-    }
+  // i2C GPIO Ext
+  gpioExt.begin_I2C(0x20);
+  gpioExt.pinMode(nSLPLPin, OUTPUT);
+  gpioExt.pinMode(nSLPRPin, OUTPUT);
+  for (int i = 0; i < 6; i++) {
+    gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
+  }
 
-    // LED PINMODES
-    gpioExt.pinMode(GPB2, OUTPUT);
-    gpioExt.pinMode(GPB3, OUTPUT);
+  // LED PINMODES
+  gpioExt.pinMode(GPB2, OUTPUT);
+  gpioExt.pinMode(GPB3, OUTPUT);
 
-    // MOTORS
-    pinMode(rightMotorDIRPin, OUTPUT);
-    pinMode(leftMotorDIRPin, OUTPUT);
-    pinMode(rightMotorPWMPin, OUTPUT);
-    pinMode(leftMotorPWMPin, OUTPUT);
+  // MOTORS
+  pinMode(rightMotorDIRPin, OUTPUT);
+  pinMode(leftMotorDIRPin, OUTPUT);
+  pinMode(rightMotorPWMPin, OUTPUT);
+  pinMode(leftMotorPWMPin, OUTPUT);
 
-    // PWM MOTOR SETUP
-    ledcSetup(rightMotorPWMCH, motorFreq, motorPwmBits);
-    ledcAttachPin(rightMotorPWMPin, rightMotorPWMCH);
-    ledcSetup(leftMotorPWMCH, motorFreq, motorPwmBits);
-    ledcAttachPin(leftMotorPWMPin, leftMotorPWMCH);
+  // PWM MOTOR SETUP
+  ledcSetup(rightMotorPWMCH, motorFreq, motorPwmBits);
+  ledcAttachPin(rightMotorPWMPin, rightMotorPWMCH);
+  ledcSetup(leftMotorPWMCH, motorFreq, motorPwmBits);
+  ledcAttachPin(leftMotorPWMPin, leftMotorPWMCH);
 
-    // INIT CLAW
-    pwmExt.begin();
-    pwmExt.setOscillatorFrequency(27000000);
-    pwmExt.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
-    pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
+  // INIT CLAW
+  pwmExt.begin();
+  pwmExt.setOscillatorFrequency(27000000);
+  pwmExt.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
+  pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
+  angleCount = map(90, 0, 180, pwm0DegCount, pwm180DegCount);
+  pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
 
-    // INIT MOTORS OFF
-    gpioExt.digitalWrite(nSLPLPin, LOW);
-    gpioExt.digitalWrite(nSLPRPin, LOW);
-    digitalWrite(leftMotorDIRPin, FWD);
-    digitalWrite(rightMotorDIRPin, FWD);
+  // INIT MOTORS OFF
+  gpioExt.digitalWrite(nSLPLPin, LOW);
+  gpioExt.digitalWrite(nSLPRPin, LOW);
+  digitalWrite(leftMotorDIRPin, FWD);
+  digitalWrite(rightMotorDIRPin, FWD);
 
 
-    // INIT SENSOR ARRAY
-    qtrArray.setTypeRC();
-    qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
-    qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
+  // INIT SENSOR ARRAY
+  qtrArray.setTypeRC();
+  qtrArray.setSensorPins(sensorPins, nSensors);  // use the name of the array without the []
+  qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
 
-    // CALIBRATE SENSORS
-    Serial.println("Starting Calibration");
-    for (int i = 0; i < 400; i++) {
-      qtrArray.calibrate();
-    }
-    Serial.println("Calibration Completed");
-    gpioExt.digitalWrite(GPB2, HIGH);
-    gpioExt.digitalWrite(GPB3, HIGH);
-    delay(500);
-    gpioExt.digitalWrite(GPB2, LOW);
-    gpioExt.digitalWrite(GPB3, LOW);
-    delay(500);
+  // CALIBRATE SENSORS
+  Serial.println("Starting Calibration");
+  for (int i = 0; i < 400; i++) {
+    qtrArray.calibrate();
+  }
+  Serial.println("Calibration Completed");
+  
+  // Blink LEDs afer calibration complete.
+  gpioExt.digitalWrite(GPB2, HIGH);
+  gpioExt.digitalWrite(GPB3, HIGH);
+  delay(500);
+  gpioExt.digitalWrite(GPB2, LOW);
+  gpioExt.digitalWrite(GPB3, LOW);
+  delay(500);
 }
 
 
 void loop() {
-    bool dataUpdated = BP32.update();
-    //parseLineFollow();
-    if (dataUpdated) {
-      processControllers();
-    }
+  // check if CTL data was updated. If so, then execute function to process controller data.
+  bool dataUpdated = BP32.update();
+  //parseLineFollow();
+  if (dataUpdated) {
+    processControllers();
+  }
 }
